@@ -30,12 +30,6 @@ public class AuthController {
         return ResponseEntity.ok(token);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<JwtToken> refresh(@RequestBody RefreshTokenDto refreshTokenDto) {
-        JwtToken token = userService.refreshToken(refreshTokenDto.getRefreshToken());
-        return ResponseEntity.ok(token);
-    }
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody RefreshTokenDto refreshTokenDto) {
         try {
@@ -43,7 +37,7 @@ public class AuthController {
             return ResponseEntity.ok("로그아웃 성공");
         } catch (Exception e) {
             log.warn("로그아웃 시 예외 발생: {}", e.getMessage());
-            return ResponseEntity.ok("로그아웃 성공"); // 에러라도 성공으로 처리
+            return ResponseEntity.ok("로그아웃 완료"); 
         }
     }
 }

@@ -36,8 +36,18 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/test/**", "/api/admin/**").permitAll()
-                        .anyRequest().permitAll()
+                        // 공개 엔드포인트
+                        .requestMatchers("/api/auth/sign-in", "/api/auth/logout").permitAll()
+                        
+                        // 권한별 엔드포인트
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/dashboard/**").hasAnyRole("USER")
+                        .requestMatchers("/api/reports/**").hasAnyRole("USER")
+                        .requestMatchers("/api/impacts/**").hasAnyRole("USER")
+                        .requestMatchers("/api/notifications/**").hasAnyRole("USER")
+                        
+                        // 나머지는 인증 필요
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),

@@ -1,12 +1,7 @@
 package com.market_plan_b.market_plan_b_auth.jwt;
 
-// Spring Security User (UserDetails 구현체)
 import org.springframework.security.core.userdetails.User;
-
-// Spring Security 권한
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-// Spring Security
 import org.springframework.security.core.GrantedAuthority;
 import com.market_plan_b.market_plan_b_auth.dto.JwtToken;
 import io.jsonwebtoken.*;
@@ -16,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +25,6 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
     private final Key key;
 
-    // application.yml에서 secret 값 가져와서 key에 저장
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -40,11 +33,6 @@ public class JwtTokenProvider {
     // Member 정보를 가지고 AccessToken, RefreshToken을 생성하는 메서드
     public JwtToken generateToken(Authentication authentication) {
         return generateTokens(authentication, true);
-    }
-
-    // Access Token만 생성하는 메서드
-    public JwtToken generateAccessToken(Authentication authentication) {
-        return generateTokens(authentication, false);
     }
 
     private JwtToken generateTokens(Authentication authentication, boolean includeRefreshToken) {
@@ -67,6 +55,7 @@ public class JwtTokenProvider {
         // Refresh Token 생성 (1주일)
         Date refreshTokenExpiresIn = new Date(now + 604800000); // 1주일 = 7 * 24 * 60 * 60 * 1000
         String refreshToken = Jwts.builder()
+                .setSubject(authentication.getName())
                 .setExpiration(refreshTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -85,22 +74,25 @@ public class JwtTokenProvider {
 
     // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
     public Authentication getAuthentication(String accessToken) {
-        // Jwt 토큰 복호화
-        Claims claims = parseClaims(accessToken);
+        try {
+            Claims claims = parseClaims(accessToken);
 
-        if (claims.get("auth") == null) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+            if (claims.get("auth") == null) {
+                throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+            }
+
+            // 클레임에서 권한 정보 가져오기
+            Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+
+            // UserDetails 객체를 만들어서 Authentication return
+            UserDetails principal = new User(claims.getSubject(), "", authorities);
+            return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        } catch (Exception e) {
+            log.error("토큰 인증 정보 추출 실패: {}", e.getMessage());
+            throw new RuntimeException("토큰 인증 정보 추출에 실패했습니다.", e);
         }
-
-        // 클레임에서 권한 정보 가져오기
-        Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-
-        // UserDetails 객체를 만들어서 Authentication return
-        // UserDetails: interface, User: UserDetails를 구현한 class
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
     // 토큰 정보를 검증하는 메서드
@@ -124,6 +116,32 @@ public class JwtTokenProvider {
     }
 
 
+    // Refresh Token으로 새로운 Access Token 생성
+    public JwtToken refreshAccessToken(String refreshToken) {
+        try {
+            if (!validateToken(refreshToken)) {
+                throw new RuntimeException("유효하지 않은 Refresh Token입니다.");
+            }
+            
+            Claims claims = parseClaims(refreshToken);
+            String subject = claims.getSubject();
+            
+            if (subject == null || subject.isEmpty()) {
+                throw new RuntimeException("Refresh Token에 사용자 정보가 없습니다.");
+            }
+            
+            // 기본 USER 권한으로 새 토큰 생성
+            Collection<GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+            UserDetails principal = new User(subject, "", authorities);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(principal, "", authorities);
+            
+            return generateToken(authentication);
+        } catch (Exception e) {
+            log.error("토큰 재발급 실패: {}", e.getMessage());
+            throw new RuntimeException("토큰 재발급에 실패했습니다.", e);
+        }
+    }
+
     // accessToken
     private Claims parseClaims(String accessToken) {
         try {
@@ -134,6 +152,9 @@ public class JwtTokenProvider {
                     .getBody();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
+        } catch (Exception e) {
+            log.error("토큰 파싱 실패: {}", e.getMessage());
+            throw new RuntimeException("토큰 파싱에 실패했습니다.", e);
         }
     }
 }

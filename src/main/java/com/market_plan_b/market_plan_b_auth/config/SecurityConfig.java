@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 엔드포인트
                         .requestMatchers("/api/auth/sign-in", "/api/auth/logout").permitAll()
+                        // .requestMatchers("/api/setup/**").permitAll()
                         
                         // 권한별 엔드포인트
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -39,14 +39,22 @@ public class UserServiceImpl implements UserService {
             
             JwtToken token = jwtTokenProvider.generateToken(authentication);
             
-            // Refresh Token 및 만료시간 DB에 저장
-            userRepository.findByEmail(email).ifPresent(user -> {
-                user.setRefreshToken(token.getRefreshToken());
-                user.setRefreshTokenExpire(token.getRefreshTokenExpire());
-                userRepository.save(user);
-            });
+            // Refresh Token 및 만료시간 DB에 저장 및 사용자 이름 추가
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
             
-            log.info("JWT 토큰 생성 완료");
+            log.info("DB에서 조회된 사용자 - ID: {}, 이름: {}, 이메일: {}, 역할: {}", 
+                    user.getId(), user.getName(), user.getEmail(), user.getRole());
+            
+            user.setRefreshToken(token.getRefreshToken());
+            user.setRefreshTokenExpire(token.getRefreshTokenExpire());
+            userRepository.save(user);
+            
+            // 사용자 이름을 토큰에 추가
+            token.setUserName(user.getName());
+            log.info("토큰에 사용자 이름 추가: {}", user.getName());
+            
+            log.info("JWT 토큰 생성 완룄 - userName: {}", token.getUserName());
             return token;
         } catch (Exception e) {
             log.error("인증 실패: {}", e.getMessage(), e);

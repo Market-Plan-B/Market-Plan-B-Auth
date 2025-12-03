@@ -14,4 +14,7 @@ public class JwtToken {
     private String accessToken;
     private String refreshToken;
     private LocalDateTime refreshTokenExpire;
+    private String userName;
+    
+    public JwtToken() {}
 }

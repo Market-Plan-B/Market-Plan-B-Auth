@@ -35,21 +35,22 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
-                        // 공개 엔드포인트
-                        .requestMatchers("/api/auth/sign-in", "/api/auth/logout").permitAll()
-                        // .requestMatchers("/api/setup/**").permitAll()
-                        
-                        // 권한별 엔드포인트
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/**").hasAnyRole("USER")
-                        .requestMatchers("/api/reports/**").hasAnyRole("USER")
-                        .requestMatchers("/api/impacts/**").hasAnyRole("USER")
-                        .requestMatchers("/api/notifications/**").hasAnyRole("USER")
-                        
-                        // 나머지는 인증 필요
-                        .anyRequest().authenticated()
-                )
+                        .authorizeHttpRequests(auth -> auth
+                            // 공개 엔드포인트
+                            .requestMatchers("/", "/actuator/health").permitAll()
+                            .requestMatchers("/api/auth/sign-in", "/api/auth/logout").permitAll()
+                            // .requestMatchers("/api/setup/**").permitAll()
+                            
+                            // 권한별 엔드포인트
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            .requestMatchers("/api/dashboard/**").hasAnyRole("USER")
+                            .requestMatchers("/api/reports/**").hasAnyRole("USER")
+                            .requestMatchers("/api/impacts/**").hasAnyRole("USER")
+                            .requestMatchers("/api/notifications/**").hasAnyRole("USER")
+                            
+                            // 나머지는 인증 필요
+                            .anyRequest().authenticated()
+                        )     
 
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class);

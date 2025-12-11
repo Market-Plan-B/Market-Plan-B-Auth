@@ -15,6 +15,7 @@ public class JwtToken {
     private String refreshToken;
     private LocalDateTime refreshTokenExpire;
     private String userName;
+    private Integer userId;
     
     public JwtToken() {}
 }

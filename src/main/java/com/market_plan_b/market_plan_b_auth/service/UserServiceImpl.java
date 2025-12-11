@@ -50,9 +50,10 @@ public class UserServiceImpl implements UserService {
             user.setRefreshTokenExpire(token.getRefreshTokenExpire());
             userRepository.save(user);
             
-            // 사용자 이름을 토큰에 추가
+            // 사용자 정보를 토큰에 추가
             token.setUserName(user.getName());
-            log.info("토큰에 사용자 이름 추가: {}", user.getName());
+            token.setUserId(user.getId());
+            log.info("토큰에 사용자 정보 추가 - ID: {}, 이름: {}", user.getId(), user.getName());
             
             log.info("JWT 토큰 생성 완룄 - userName: {}", token.getUserName());
             return token;

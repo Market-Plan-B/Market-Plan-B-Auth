@@ -1,17 +1,18 @@
 package com.market_plan_b.market_plan_b_auth.service;
 
-import com.market_plan_b.market_plan_b_auth.domain.Role;
-import com.market_plan_b.market_plan_b_auth.domain.User;
-import com.market_plan_b.market_plan_b_auth.dto.JwtToken;
-import com.market_plan_b.market_plan_b_auth.jwt.JwtTokenProvider;
-import com.market_plan_b.market_plan_b_auth.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.market_plan_b.market_plan_b_auth.domain.User;
+import com.market_plan_b.market_plan_b_auth.dto.JwtToken;
+import com.market_plan_b.market_plan_b_auth.jwt.JwtTokenProvider;
+import com.market_plan_b.market_plan_b_auth.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

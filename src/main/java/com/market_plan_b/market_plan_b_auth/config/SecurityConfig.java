@@ -1,9 +1,5 @@
 package com.market_plan_b.market_plan_b_auth.config;
 
-import com.market_plan_b.market_plan_b_auth.auth.CustomUserDetailsService;
-import com.market_plan_b.market_plan_b_auth.jwt.JwtAuthenticationFilter;
-import com.market_plan_b.market_plan_b_auth.jwt.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +12,12 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.market_plan_b.market_plan_b_auth.auth.CustomUserDetailsService;
+import com.market_plan_b.market_plan_b_auth.jwt.JwtAuthenticationFilter;
+import com.market_plan_b.market_plan_b_auth.jwt.JwtTokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -37,9 +39,7 @@ public class SecurityConfig {
 
                         .authorizeHttpRequests(auth -> auth
                             // 공개 엔드포인트
-                            .requestMatchers("/", "/actuator/health").permitAll()
-                            .requestMatchers("/api/auth/sign-in", "/api/auth/logout").permitAll()
-                            // .requestMatchers("/api/setup/**").permitAll()
+                            .requestMatchers("/api/auth/sign-in", "/api/auth/logout", "/api/auth/refresh").permitAll()
                             
                             // 권한별 엔드포인트
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
